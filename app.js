@@ -4,27 +4,14 @@ var express      = require("express"),
     mongoose     = require("mongoose"),
     Campground   = require("./models/campground"),
     Comment      = require("./models/comment"),
-    User         = require("./models/user");
+    // User         = require("./models/user"),
+    seedDB       = require("./seeds");
 
+seedDB();
 mongoose.connect("mongodb://localhost/yelp_camp");
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
-
-
-
-// Campground.create({
-//     name: "Granite Hill",
-//     image: "https://farm4.staticflickr.com/3189/3062178880_4edc3b60d5.jpg",
-//     description: "A serene overlook offering a lake view and all of the privacy you could ever need!"
-// }, function (err, campground){
-//     if (err) {
-//         console.log(err);
-//     } else {
-//         console.log("Newly created campground: ")
-//         console.log(campground);
-//     }
-// });
 
 // ***************** //
 // ROUTE DEFINITIONS //
@@ -33,6 +20,8 @@ app.set("view engine", "ejs");
 app.get("/", function(req, res) {
     res.render("landing");
 });
+
+// INDEX - show all campgrounds
 
 app.get("/campgrounds", function(req, res) {
     Campground.find({}, function(err, allCampgrounds) {
@@ -43,6 +32,8 @@ app.get("/campgrounds", function(req, res) {
         }
     });
 });
+
+// CREATE - add new campground to DB
 
 app.post("/campgrounds", function(req, res) {
     
@@ -62,17 +53,22 @@ app.post("/campgrounds", function(req, res) {
    });
 });
 
+// NEW - show form to create new campground
+
 app.get("/campgrounds/new", function(req, res) {
    res.render("new") 
 });
 
+// SHOW - shows more info about one campground
+
 app.get("/campgrounds/:id", function(req, res){
     // find the campground with provided ID
-    Campground.findById(req.params.id, function(err, foundCampground){
+    Campground.findById(req.params.id).populate("comments").exec(function(err, foundCampground){
        if (err) {
            console.log(err);
        } else {
-         res.render("show", {campground: foundCampground});  
+            console.log(foundCampground);
+            res.render("show", {campground: foundCampground});  
        }
     });
 });
