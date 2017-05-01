@@ -1,38 +1,18 @@
 var express      = require("express"),
     app          = express(),
     bodyParser   = require("body-parser"),
-    mongoose     = require("mongoose");
+    mongoose     = require("mongoose"),
+    Campground   = require("./models/campground"),
+    Comment      = require("./models/comment"),
+    // User         = require("./models/user"),
+    seedDB       = require("./seeds");
 
+seedDB();
 mongoose.connect("mongodb://localhost/yelp_camp");
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(express.static(__dirname + "/public"));
 app.set("view engine", "ejs");
 
-
-
-// ************ //
-// SCHEMA SETUP //
-// ************ //
-
-var campgroundSchema = new mongoose.Schema({
-    name: String,
-    image: String,
-    description: String
-});
-
-var Campground = mongoose.model("Campground", campgroundSchema);
-
-// Campground.create({
-//     name: "Granite Hill",
-//     image: "https://farm4.staticflickr.com/3189/3062178880_4edc3b60d5.jpg",
-//     description: "A serene overlook offering a lake view and all of the privacy you could ever need!"
-// }, function (err, campground){
-//     if (err) {
-//         console.log(err);
-//     } else {
-//         console.log("Newly created campground: ")
-//         console.log(campground);
-//     }
-// });
 
 // ***************** //
 // ROUTE DEFINITIONS //
@@ -42,15 +22,19 @@ app.get("/", function(req, res) {
     res.render("landing");
 });
 
+// INDEX - show all campgrounds
+
 app.get("/campgrounds", function(req, res) {
     Campground.find({}, function(err, allCampgrounds) {
         if (err) {
             console.log(err);
         } else {
-            res.render("index", {campgrounds:allCampgrounds});
+            res.render("campgrounds/index", {campgrounds:allCampgrounds});
         }
     });
 });
+
+// CREATE - add new campground to DB
 
 app.post("/campgrounds", function(req, res) {
     
@@ -70,22 +54,59 @@ app.post("/campgrounds", function(req, res) {
    });
 });
 
+// NEW - show form to create new campground
+
 app.get("/campgrounds/new", function(req, res) {
-   res.render("new") 
+   res.render("campgrounds/new") 
 });
+
+// SHOW - shows more info about one campground
 
 app.get("/campgrounds/:id", function(req, res){
     // find the campground with provided ID
-    Campground.findById(req.params.id, function(err, foundCampground){
+    Campground.findById(req.params.id).populate("comments").exec(function(err, foundCampground){
        if (err) {
            console.log(err);
        } else {
-         res.render("show", {campground: foundCampground});  
+            console.log(foundCampground);
+            res.render("campgrounds/show", {campground: foundCampground});  
        }
     });
 });
 
+// *************** //
+// COMMENTS ROUTES //
+// *************** //
 
+app.get("/campgrounds/:id/comments/new", function(req, res) {
+    Campground.findById(req.params.id, function(err, campground) {
+        if (err) {
+            console.log(err);
+        } else {
+            res.render("comments/new", {campground: campground});
+        }
+    });
+});
+
+app.post("/campgrounds/:id/comments", function(req, res) {
+    // lookup campground using id
+    Campground.findById(req.params.id, function(err, campground) {
+        if (err) {
+            console.log(err);
+            res.redirect("/campgrounds");
+        } else {
+            Comment.create(req.body.comment, function(err, comment) {
+                if (err) {
+                    console.log(err);
+                } else {
+                    campground.comments.push(comment);
+                    campground.save();
+                    res.redirect("/campgrounds/" + campground._id);
+                }
+            });
+        }
+    });
+});
 
 // **************** //
 // SET SERVER PORTS //
