@@ -15,7 +15,7 @@ router.get("/", function(req, res) {
 // register form
 
 router.get("/register", function(req, res) {
-    res.render("register");
+    res.render("register", {page: "register"});
 });
 
 // register create
@@ -38,7 +38,7 @@ router.post("/register", function(req, res) {
 // show login form
 
 router.get("/login", function(req, res) {
-    res.render("login", {message: req.flash("error")});
+    res.render("login", {message: req.flash("error"), page: "login"});
 });
 
 router.post("/login", passport.authenticate("local", {
