@@ -12,10 +12,9 @@ var express        = require("express"),
     seedDB         = require("./seeds");
     
 // DB setup
-
 // seedDB();
 // mongoose.connect("mongodb://localhost/yelp_camp");
-mongoose.connect("mongodb://admin:password123@ds133241.mlab.com:33241/rday-yelpcamp");
+mongoose.connect(process.env.DATABASEURL);
 // mongodb://admin:password123@ds133241.mlab.com:33241/rday-yelpcamp
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static(__dirname + "/public"));
